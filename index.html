@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리니지 클래식 아덴 계산기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('image_de70c6.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* 스크롤 시 배경 고정 */
+            background-repeat: no-repeat;
+        }
+        
+        /* 계산기 본문을 반투명하게 만들어 배경과 어우러지게 함 */
+        .glass-panel {
+            background-color: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+        }
+
+        /* 숫자 입력 화살표 숨기기 */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4">
+
+    <div class="glass-panel rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full max-w-2xl overflow-hidden border border-gray-200/50">
+        <!-- 헤더 영역 -->
+        <div class="bg-gradient-to-r from-blue-700/90 to-indigo-800/90 p-5 sm:p-6 text-white text-center border-b border-blue-900/50">
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold mb-2 tracking-tight">리니지 클래식 아덴 계산기</h1>
+            <p class="text-blue-100 text-xs sm:text-sm flex items-center justify-center gap-2">
+        </div>
+
+        <div class="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
+            
+            <div class="flex flex-col gap-2">
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-700 font-semibold text-sm sm:text-base">현재 기준 시세 :</span>
+                        <span class="text-xs sm:text-sm text-gray-500">1만 아덴 당</span>
+                    </div>
+                    <div class="flex flex-wrap sm:flex-nowrap items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto">
+                        <div class="flex items-center gap-1 sm:gap-2 justify-end w-full sm:w-auto">
+                            <input type="text" inputmode="numeric" id="rateInput" value="700" 
+                                   class="w-24 sm:w-32 px-2 sm:px-3 py-2 text-right border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-base sm:text-lg"
+                                   oninput="formatInput(this); calculateAll()">
+                            <span class="font-bold text-gray-700 text-sm sm:text-base shrink-0">원</span>
+                        </div>
+                        <div class="flex items-center gap-2 justify-end w-full sm:w-auto mt-1 sm:mt-0">
+                            <button onclick="fetchLatestPrice()" id="syncBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition shadow-sm shrink-0 flex-1 sm:flex-none break-keep">
+                                시세 연동
+                            </button>
+                            <a href="https://gamebit.co.kr/map/" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg transition shadow-sm shrink-0 flex-1 sm:flex-none text-center break-keep">
+                                시세 보기 🔗
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- 상태 표시 텍스트 -->
+                <div id="syncStatus" class="text-xs sm:text-sm text-right text-gray-500 px-2 break-keep"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                
+                <!-- 아덴 -> 현금 계산 영역 -->
+                <div class="bg-gray-50 p-4 sm:p-5 rounded-xl border border-gray-200">
+                    <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs sm:text-sm">아덴</span> 👉 현금 변환
+                    </h2>
+                    
+                    <div class="mb-4">
+                        <label class="block text-xs sm:text-sm text-gray-600 mb-1">보유 아덴 입력 (숫자만)</label>
+                        <div class="relative">
+                            <input type="text" inputmode="numeric" id="adenInput" placeholder="예: 1,000,000" 
+                                   class="w-full pl-3 sm:pl-4 pr-14 sm:pr-16 py-2 sm:py-3 text-right border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-base sm:text-lg"
+                                   oninput="formatInput(this); calcAdenToCash()">
+                            <span class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">아덴</span>
+                        </div>
+                        <div id="adenKorean" class="text-right text-xs sm:text-sm text-indigo-600 mt-1 h-4 sm:h-5 font-medium"></div>
+                    </div>
+
+                    <!-- 단축 버튼 영역 (모바일에서 4칸 균등 분할) -->
+                    <div class="grid grid-cols-4 gap-1.5 sm:gap-2 mb-5 sm:mb-6">
+                        <button onclick="addAden(10000)" class="px-1 sm:px-3 py-1.5 sm:py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-xs sm:text-sm transition break-keep">+1만</button>
+                        <button onclick="addAden(100000)" class="px-1 sm:px-3 py-1.5 sm:py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-xs sm:text-sm transition break-keep">+10만</button>
+                        <button onclick="addAden(1000000)" class="px-1 sm:px-3 py-1.5 sm:py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-xs sm:text-sm transition break-keep">+100만</button>
+                        <button onclick="clearAden()" class="px-1 sm:px-3 py-1.5 sm:py-1 bg-red-50 border border-red-200 text-red-600 rounded hover:bg-red-100 text-xs sm:text-sm transition break-keep">초기화</button>
+                    </div>
+
+                    <div class="bg-white border-2 border-indigo-200 rounded-lg p-3 sm:p-4 text-center">
+                        <div class="text-xs sm:text-sm text-gray-500 mb-1">예상 현금</div>
+                        <div class="text-xl sm:text-2xl font-bold text-gray-800 break-all" id="resultCash">0 <span class="text-base sm:text-lg font-normal">원</span></div>
+                        <div id="resultCashKorean" class="text-indigo-600 font-medium mt-1 h-4 sm:h-5 text-xs sm:text-sm break-keep"></div>
+                    </div>
+                </div>
+
+                <!-- 현금 -> 아덴 계산 영역 -->
+                <div class="bg-gray-50 p-4 sm:p-5 rounded-xl border border-gray-200">
+                    <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs sm:text-sm">현금</span> 👉 아덴 변환
+                    </h2>
+                    
+                    <div class="mb-4">
+                        <label class="block text-xs sm:text-sm text-gray-600 mb-1">사용할 현금 입력 (숫자만)</label>
+                        <div class="relative">
+                            <input type="text" inputmode="numeric" id="cashInput" placeholder="예: 70,000" 
+                                   class="w-full pl-3 sm:pl-4 pr-12 sm:pr-14 py-2 sm:py-3 text-right border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 font-bold text-base sm:text-lg"
+                                   oninput="formatInput(this); calcCashToAden()">
+                            <span class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">원</span>
+                        </div>
+                        <div id="cashKorean" class="text-right text-xs sm:text-sm text-green-600 mt-1 h-4 sm:h-5 font-medium"></div>
+                    </div>
+
+                    <!-- 단축 버튼 영역 (모바일에서 4칸 균등 분할) -->
+                    <div class="grid grid-cols-4 gap-1.5 sm:gap-2 mb-5 sm:mb-6">
+                        <button onclick="addCash(10000)" class="px-1 sm:px-3 py-1.5 sm:py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-xs sm:text-sm transition break-keep">+1만</button>
+                        <button onclick="addCash(50000)" class="px-1 sm:px-3 py-1.5 sm:py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-xs sm:text-sm transition break-keep">+5만</button>
+                        <button onclick="addCash(100000)" class="px-1 sm:px-3 py-1.5 sm:py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-xs sm:text-sm transition break-keep">+10만</button>
+                        <button onclick="clearCash()" class="px-1 sm:px-3 py-1.5 sm:py-1 bg-red-50 border border-red-200 text-red-600 rounded hover:bg-red-100 text-xs sm:text-sm transition break-keep">초기화</button>
+                    </div>
+
+                    <div class="bg-white border-2 border-green-200 rounded-lg p-3 sm:p-4 text-center">
+                        <div class="text-xs sm:text-sm text-gray-500 mb-1">구매 가능 아덴</div>
+                        <div class="text-xl sm:text-2xl font-bold text-gray-800 break-all" id="resultAden">0 <span class="text-base sm:text-lg font-normal">아덴</span></div>
+                        <div id="resultAdenKorean" class="text-green-600 font-medium mt-1 h-4 sm:h-5 text-xs sm:text-sm break-keep"></div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="text-center text-xs text-gray-400 mt-2 sm:mt-4 break-keep">
+                * 브라우저 보안(CORS) 및 거래소 봇 차단(Cloudflare) 시스템에 의해 자동 시세 연동이 실패할 수 있으며, 이 경우 수동으로 시세를 입력해 주세요.
+            </div>
+
+            <!-- 만든사람 표기 추가 -->
+            <div class="text-center text-xs font-semibold text-gray-500 mt-4 pt-4 border-t border-gray-200/50">
+                Made by 폭군하스 Ver. 2.1
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM 요소 가져오기
+        const rateInput = document.getElementById('rateInput');
+        
+        const adenInput = document.getElementById('adenInput');
+        const adenKorean = document.getElementById('adenKorean');
+        const resultCash = document.getElementById('resultCash');
+        const resultCashKorean = document.getElementById('resultCashKorean');
+
+        const cashInput = document.getElementById('cashInput');
+        const cashKorean = document.getElementById('cashKorean');
+        const resultAden = document.getElementById('resultAden');
+        const resultAdenKorean = document.getElementById('resultAdenKorean');
+
+        // 숫자를 한글 단위(만, 억 등)로 변환해주는 함수
+        function numberToKorean(number) {
+            if (!number || isNaN(number) || number == 0) return '';
+            
+            const inputNumber = parseInt(number);
+            const unitWords = ['', '만', '억', '조', '경'];
+            const splitUnit = 10000;
+            const splitCount = unitWords.length;
+            let resultArray = [];
+            let resultString = '';
+
+            for (let i = 0; i < splitCount; i++) {
+                let unitResult = Math.floor((inputNumber % Math.pow(splitUnit, i + 1)) / Math.pow(splitUnit, i));
+                if (unitResult > 0) {
+                    resultArray[i] = unitResult;
+                }
+            }
+
+            for (let i = 0; i < resultArray.length; i++) {
+                if (!resultArray[i]) continue;
+                resultString = String(resultArray[i].toLocaleString()) + unitWords[i] + ' ' + resultString;
+            }
+
+            return resultString.trim();
+        }
+
+        // 3자리마다 콤마 찍어주는 함수
+        function formatNumber(num) {
+            return Number(Math.floor(num)).toLocaleString();
+        }
+
+        // 입력창 실시간 콤마 포맷팅 함수
+        function formatInput(elem) {
+            let val = elem.value.replace(/[^0-9]/g, ''); // 숫자 외 문자 제거
+            if (val) {
+                elem.value = Number(val).toLocaleString();
+            } else {
+                elem.value = '';
+            }
+        }
+
+        // 전체 다시 계산 (시세 변경 시 호출)
+        function calculateAll() {
+            calcAdenToCash();
+            calcCashToAden();
+        }
+
+        // 아덴 -> 현금 계산 로직
+        function calcAdenToCash() {
+            const rate = parseFloat(rateInput.value.replace(/,/g, '')) || 0;
+            const aden = parseFloat(adenInput.value.replace(/,/g, '')) || 0;
+            
+            // 입력값 한글 표기 업데이트
+            adenKorean.textContent = aden > 0 ? `(${numberToKorean(aden)} 아덴)` : '';
+
+            // 계산 (1만 아덴당 rate 원) -> 1 아덴당 (rate / 10000) 원
+            const cash = aden * (rate / 10000);
+            
+            // 결과 출력
+            resultCash.innerHTML = `${formatNumber(cash)} <span class="text-lg font-normal">원</span>`;
+            resultCashKorean.textContent = cash > 0 ? `${numberToKorean(cash)} 원` : '';
+        }
+
+        // 현금 -> 아덴 계산 로직
+        function calcCashToAden() {
+            const rate = parseFloat(rateInput.value.replace(/,/g, '')) || 0;
+            const cash = parseFloat(cashInput.value.replace(/,/g, '')) || 0;
+
+            // 입력값 한글 표기 업데이트
+            cashKorean.textContent = cash > 0 ? `(${numberToKorean(cash)} 원)` : '';
+
+            // 계산 (rate 원당 10000 아덴)
+            let aden = 0;
+            if (rate > 0) {
+                aden = cash * (10000 / rate);
+            }
+
+            // 결과 출력
+            resultAden.innerHTML = `${formatNumber(aden)} <span class="text-lg font-normal">아덴</span>`;
+            resultAdenKorean.textContent = aden > 0 ? `${numberToKorean(aden)} 아덴` : '';
+        }
+
+        // 단축 버튼 기능 (아덴)
+        function addAden(amount) {
+            const currentVal = parseFloat(adenInput.value.replace(/,/g, '')) || 0;
+            adenInput.value = (currentVal + amount).toLocaleString();
+            calcAdenToCash();
+        }
+
+        function clearAden() {
+            adenInput.value = '';
+            calcAdenToCash();
+        }
+
+        // 단축 버튼 기능 (현금)
+        function addCash(amount) {
+            const currentVal = parseFloat(cashInput.value.replace(/,/g, '')) || 0;
+            cashInput.value = (currentVal + amount).toLocaleString();
+            calcCashToAden();
+        }
+
+        function clearCash() {
+            cashInput.value = '';
+            calcCashToAden();
+        }
+
+        async function fetchLatestPrice() {
+            const syncBtn = document.getElementById('syncBtn');
+            const syncStatus = document.getElementById('syncStatus');
+            
+            syncBtn.disabled = true;
+            syncBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            syncBtn.textContent = '불러오는 중...';
+            syncStatus.textContent = '게임비트 시세를 가져오고 있습니다...';
+            syncStatus.className = 'text-xs sm:text-sm text-right px-2 break-keep text-gray-500';
+
+            const targetUrl = 'https://gamebit.co.kr/map/';
+            
+            // 안정성을 높이기 위해 여러 프록시 서비스를 배열로 준비 (순차적으로 시도)
+            const proxies = [
+                `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+            ];
+
+            let htmlString = null;
+            let successProxy = false;
+
+            for (const proxyUrl of proxies) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8초 타임아웃
+                    
+                    const response = await fetch(proxyUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+
+                    if (response.ok) {
+                        if (proxyUrl.includes('allorigins')) {
+                            const json = await response.json();
+                            htmlString = json.contents;
+                        } else {
+                            htmlString = await response.text();
+                        }
+                        
+                        if (htmlString && !htmlString.includes('Cloudflare') && !htmlString.includes('Just a moment')) {
+                            successProxy = true;
+                            break; // 성공적으로 가져오면 프록시 시도 중단
+                        }
+                    }
+                } catch (e) {
+                    console.log(`프록시 실패: ${proxyUrl}`, e);
+                    // 다음 프록시 시도
+                }
+            }
+
+            if (!successProxy || !htmlString) {
+                syncStatus.textContent = '연동 실패: 보안 정책으로 인해 차단되었습니다. (수동 입력 필요)';
+                syncStatus.className = 'text-xs sm:text-sm text-right px-2 break-keep text-red-500';
+                resetSyncBtn(syncBtn);
+                return;
+            }
+
+            try {
+                // 게임비트 "마커 OOO원" 텍스트 패턴을 찾아 추출
+                const regex = /마커[\s\S]{0,100}?([0-9,]+)\s*원/i;
+                const match = regex.exec(htmlString);
+
+                if (match && match[1]) {
+                    const price = parseInt(match[1].replace(/,/g, ''), 10);
+                    
+                    if (!isNaN(price) && price > 0) {
+                        rateInput.value = price.toLocaleString();
+                        calculateAll(); 
+                        
+                        syncStatus.textContent = `성공! 게임비트 차트 마커 시세(${formatNumber(price)}원)가 적용되었습니다.`;
+                        syncStatus.className = 'text-xs sm:text-sm text-right px-2 break-keep text-green-600 font-medium';
+                    } else {
+                        throw new Error('시세 숫자를 정상적으로 읽지 못했습니다.');
+                    }
+                } else {
+                    // 마커를 찾지 못할 경우 테이블의 마프르 현재가로 대체 시도 (Fallback)
+                    const altRegex = /마프르[\s\S]*?<td[^>]*>\s*([\d,]+)\s*<\/td>/i;
+                    const altMatch = altRegex.exec(htmlString);
+                    
+                    if(altMatch && altMatch[1]) {
+                        const altPrice = parseInt(altMatch[1].replace(/,/g, ''), 10);
+                        if (!isNaN(altPrice) && altPrice > 0) {
+                            rateInput.value = altPrice.toLocaleString();
+                            calculateAll();
+                            
+                            syncStatus.textContent = `성공! 차트 대신 마프르 서버 현재가(${formatNumber(altPrice)}원)가 적용되었습니다.`;
+                            syncStatus.className = 'text-xs sm:text-sm text-right px-2 break-keep text-green-600 font-medium';
+                            resetSyncBtn(syncBtn);
+                            return;
+                        }
+                    }
+                    throw new Error('페이지에서 차트 마커 또는 시세 정보를 찾을 수 없습니다.');
+                }
+
+            } catch (error) {
+                console.error('데이터 파싱 에러:', error);
+                syncStatus.textContent = `연동 실패: 데이터 분석 오류 (수동 입력 필요)`;
+                syncStatus.className = 'text-xs sm:text-sm text-right px-2 break-keep text-red-500';
+            } finally {
+                resetSyncBtn(syncBtn);
+            }
+        }
+        
+        function resetSyncBtn(btn) {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            btn.textContent = '시세 연동';
+        }
+
+        // 초기화 시 한번 계산 실행
+        calculateAll();
+        
+        // 프로그램 실행 시 자동으로 1회 시세 동기화 시도
+        fetchLatestPrice();
+    </script>
+</body>
+</html>
